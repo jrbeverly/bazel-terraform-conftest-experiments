@@ -1,4 +1,0 @@
-
-
-def thing():
-    print("hi")
