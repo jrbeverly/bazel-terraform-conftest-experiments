@@ -1,0 +1,11 @@
+load("//:bazel/terraform.bzl", "terraform_package", "terraform_plan")
+
+terraform_package(
+    name = "package",
+    srcs = glob(["*.tf"]),
+)
+
+terraform_plan(
+    name = "plan",
+    src = ":package",
+)

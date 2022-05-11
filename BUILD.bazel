@@ -1,8 +1,0 @@
-load("//:bazel/terraform.bzl", "terraform_package")
-
-terraform_package(
-    name = "never_stamped",
-    srcs = [
-        ":README.md",
-    ],
-)
