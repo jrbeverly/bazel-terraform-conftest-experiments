@@ -1,5 +1,6 @@
 load("//:bazel/terraform.bzl", "terraform_package", "terraform_plan")
 
+# Build & Package with everything we could possibly need
 terraform_package(
     name = "package",
     srcs = glob(["*.tf"]),
