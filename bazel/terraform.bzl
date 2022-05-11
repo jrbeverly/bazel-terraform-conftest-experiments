@@ -5,6 +5,7 @@ TerraformBundle = provider(
         fields = {
             "dir": "a directory containing all of the files",
             "bundle": "A tarball containing all of the binaries",
+            "deps": "xyz"
         },
     )
 
@@ -23,7 +24,16 @@ def _terraform_package_impl(ctx):
         mnemonic = "TerraformInit",
         outputs = [out],
     )
-    return [DefaultInfo(files = depset([out])), _make_provider()]
+    return [
+        DefaultInfo(
+            files = depset([out])
+        ),
+        TerraformBundle(
+            dir = out,
+            deps = ctx.runfiles(files = [out]),
+            bundle = ctx.file.src,
+        ),
+    ]
 
 _terraform_package = rule(
     implementation = _terraform_package_impl,
@@ -47,7 +57,7 @@ def terraform_package(name, srcs):
     _terraform_package(
         name = init_pkg,
         src = src_package,
-    )
+    ) # Create Plan off this
 
     pkg_tar(
         name = name,
@@ -57,19 +67,31 @@ def terraform_package(name, srcs):
     )
 
 def _terraform_plan_impl(ctx):
-    out = ctx.actions.declare_file(ctx.label.name)
+    script = ctx.actions.declare_file(ctx.label.name)
+    bundle = ctx.attr.src[TerraformBundle]
+    
     ctx.actions.write(
-        output = out,
-        content = "Hello\n",
+        script, 
+        """
+        ls
+        terraform -chdir="{script}" plan
+        """.format(
+            script = bundle.dir.path
+        ),
+        is_executable = True
     )
-    return [DefaultInfo(files = depset([out]))]
+    # runfiles = ctx.runfiles(files = [bundle.dir])
+    return [DefaultInfo(executable = script, runfiles = bundle.deps)]
 
 
 terraform_plan = rule(
     implementation = _terraform_plan_impl,
     attrs = {
-        "src": attr.label(),
+        "src": attr.label(
+            providers = [TerraformBundle]
+        ),
     },
+    executable = True,
 )
 
 # def terraform_plan(name, src):

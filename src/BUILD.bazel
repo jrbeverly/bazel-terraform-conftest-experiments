@@ -8,5 +8,5 @@ terraform_package(
 
 terraform_plan(
     name = "plan",
-    src = ":package",
+    src = ":package_init",
 )

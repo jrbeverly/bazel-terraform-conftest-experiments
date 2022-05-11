@@ -6,3 +6,8 @@ Here is the process:
 3) Support some means of saving the lock file from source (lock by source)
 4) Package everything into a single `.tar.gz` file for publishing
 5) Support running `terraform plan` on the output directory (Need provider)
+
+
+An external system should handle the overhead complexity of synchronizing all of the deployment bits
+    Specifically a tool that understands invocation:
+        Provider(CommonScriptExec), Then just CHAIN Exec & Catch the conventions for files
