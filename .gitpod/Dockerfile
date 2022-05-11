@@ -17,9 +17,9 @@ RUN curl -sSL "${TERRAFORM_URL}" -o terraform.zip \
     && chmod +x terraform \
     && mv terraform /usr/local/bin/terraform
 
-ARG BAZEL_BUILDTOOLS_URL="https://github.com/bazelbuild/buildtools/releases/download/"
-RUN curl -sSL "${BAZEL_BUILDTOOLS_URL}/5.1.0/buildozer" > /usr/local/bin/buildozer && \
-    curl -sSL "${BAZEL_BUILDTOOLS_URL}/5.1.0/buildifier" >  /usr/local/bin/buildifier && \
+ARG BAZEL_BUILDTOOLS_URL="https://github.com/bazelbuild/buildtools/releases/download"
+RUN curl -sSL "${BAZEL_BUILDTOOLS_URL}/5.1.0/buildozer-linux-amd64" > /usr/local/bin/buildozer && \
+    curl -sSL "${BAZEL_BUILDTOOLS_URL}/5.1.0/buildifier-linux-amd64" >  /usr/local/bin/buildifier && \
     chmod +x /usr/local/bin/buildozer && \
     chmod +x /usr/local/bin/buildifier 
 

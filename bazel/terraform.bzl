@@ -1,5 +1,13 @@
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
+TerraformBundle = provider(
+        doc = "A terraform bundle.",
+        fields = {
+            "dir": "a directory containing all of the files",
+            "bundle": "A tarball containing all of the binaries",
+        },
+    )
+
 def _terraform_package_impl(ctx):
     out = ctx.actions.declare_directory(ctx.label.name)
     # TF_DATA_DIR
@@ -15,7 +23,7 @@ def _terraform_package_impl(ctx):
         mnemonic = "TerraformInit",
         outputs = [out],
     )
-    return [DefaultInfo(files = depset([out]))]
+    return [DefaultInfo(files = depset([out])), _make_provider()]
 
 _terraform_package = rule(
     implementation = _terraform_package_impl,

@@ -1,1 +1,8 @@
-Need to have a pre-amble to run & get the providers initialized
+Here is the process:
+
+
+1) Provide me a fully working copy of all of the source files
+2) Run some means of creating a terraform lock file by `bazel run //..init`
+3) Support some means of saving the lock file from source (lock by source)
+4) Package everything into a single `.tar.gz` file for publishing
+5) Support running `terraform plan` on the output directory (Need provider)
