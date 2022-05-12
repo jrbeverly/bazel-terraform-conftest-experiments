@@ -1,4 +1,4 @@
-load("//:bazel/terraformv2.bzl", "terraform_package", "terraform_workspace")
+load("//:bazel/lib/rules_terraform/defs.bzl", "terraform_package", "terraform_workspace")
 
 
 terraform_package(
