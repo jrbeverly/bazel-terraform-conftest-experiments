@@ -70,11 +70,27 @@ TerraformBundleInfo = provider(
         },
     )
 
+TerraformSDK = provider(
+    doc = "Contains information about the Terraform SDK used in the toolchain",
+    fields = {
+        "tool": "The terraform binary file",
+    },
+)
 
 def _terraform_package_impl(ctx):
+    terraform = ctx.toolchains["@bazel_toolchain_terraform//:toolchain_type"].toolinfo
+    exec_mirror = ctx.actions.declare_symlink("terraform-%s" % (ctx.label.name))
+    ctx.actions.symlink(
+        exec_mirror, 
+        target_file=terraform.tool,
+        # target_path=terraform.tool.path, 
+        is_executable=True,
+    )
     return [
         DefaultInfo(
-            files = depset([ctx.file.bundle])
+            files = depset([ctx.file.bundle]),
+            runfiles = ctx.runfiles(files = ctx.files.workspace + terraform.tool),
+            executable = exec_mirror,
         ),
         TerraformBundleInfo(
             package = ctx.file.bundle,
@@ -84,15 +100,41 @@ def _terraform_package_impl(ctx):
 
 _terraform_package = rule(
     implementation = _terraform_package_impl,
+    executable = True,
     attrs = {
         "bundle": attr.label(
             allow_single_file = True
         ),
         "workspace": attr.label(
             allow_single_file = False
-        )
+        ),
     },
+    toolchains = [
+        "@bazel_toolchain_terraform//:toolchain_type",
+    ],
 )
+
+
+
+
+# genrule(
+#     name = "hello_gen",
+#     outs = ["hello.txt"],
+#     cmd = "echo hello world >$@",
+# )
+
+
+# How to make this executable?
+# https://github.com/bazelbuild/rules_go/blob/master/go/private/rules/binary.bzl#L117
+# https://github.com/bazelbuild/rules_go/blob/master/go/private/context.bzl#L381
+# https://github.com/bazelbuild/rules_go/blob/master/go/private/go_toolchain.bzl#L75
+# https://github.com/bazelbuild/rules_go/blob/master/go/private/providers.bzl#L56
+
+# Like the go binary, I suspect we'll need:
+#    A Provider (TerraformCLI)
+#    A Toolchain (use local `terraform` or download - extract from someone elses)
+#    Means of providing that SDK to the runs
+
 
 def terraform_package(name, srcs):
     """Function description.
@@ -127,54 +169,28 @@ def terraform_package(name, srcs):
         workspace = ":%s" % (label_bundle),
     )
 
-
-
-# genrule(
-#     name = "hello_gen",
-#     outs = ["hello.txt"],
-#     cmd = "echo hello world >$@",
-# )
-
-
-# How to make this executable?
-# https://github.com/bazelbuild/rules_go/blob/master/go/private/rules/binary.bzl#L117
-# https://github.com/bazelbuild/rules_go/blob/master/go/private/context.bzl#L381
-# https://github.com/bazelbuild/rules_go/blob/master/go/private/go_toolchain.bzl#L75
-# https://github.com/bazelbuild/rules_go/blob/master/go/private/providers.bzl#L56
-
-# Like the go binary, I suspect we'll need:
-#    A Provider (TerraformCLI)
-#    A Toolchain (use local `terraform` or download - extract from someone elses)
-#    Means of providing that SDK to the runs
-
 def _terraform_workspace_impl(ctx):
     bundle = ctx.attr.src[TerraformBundleInfo]
-    # print(bundle.workspace)
-    out = ctx.actions.declare_file("%s.tfstate" % ctx.label.name)
-    ctx.actions.run(
-        executable = "terraform",
-        inputs = [bundle.workspace],
-        use_default_shell_env = True,
-        arguments = [
-            "-chdir=%s" % bundle.workspace.path,
-            "apply",
-            "-auto-approve",
-            "-state=%s" % out.path
-        ],
-        mnemonic = "TerraformInit",
-        outputs = [out],
-    )
     return [
         DefaultInfo(
-            files = depset([out])
+            files = depset([bundle.workspace]),
+            runfiles = ctx.runfiles(files = [bundle.workspace]),
+            executable = ctx.executable.tool,
         ),
     ]
 
 terraform_workspace = rule(
     implementation = _terraform_workspace_impl,
+    executable = True,
     attrs = {
         "src": attr.label(
             providers = [TerraformBundleInfo]
+        ),
+        "tool": attr.label(
+            allow_single_file = True,
+            executable = True,
+            cfg = "exec",
+            default = "//:terraform",
         ),
     },
 )

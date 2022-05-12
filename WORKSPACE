@@ -1,11 +1,33 @@
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-http_archive(
-    name = "rules_pkg",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.7.0/rules_pkg-0.7.0.tar.gz",
-        "https://github.com/bazelbuild/rules_pkg/releases/download/0.7.0/rules_pkg-0.7.0.tar.gz",
-    ],
-    sha256 = "8a298e832762eda1830597d64fe7db58178aa84cd5926d76d5b744d6558941c2",
-)
+workspace(name = "conftest-terraform-workflow")
+
+load("//:bazel/rules/deps.bzl", "bazel_dependencies")
+
+bazel_dependencies()
+
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+
 rules_pkg_dependencies()
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+
+container_deps()
+
+load("//:bazel/macros/load_all.bzl", "register_external_toolchains")
+
+register_external_toolchains(
+    name = "external_toolchains",
+    toolchains = {
+        "//:bazel/toolchains/terraform.toolchain": "bazel_toolchain_terraform",
+    },
+)
+
+load("@external_toolchains//:deps.bzl", "install_toolchains")
+
+install_toolchains()

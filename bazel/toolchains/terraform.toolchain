@@ -1,0 +1,9 @@
+Name=terraform
+Version=1.1.9
+
+[linux_amd64]
+OS=linux
+CPU=x86_64
+Executable=terraform
+URL=https://releases.hashicorp.com/terraform/1.1.9/terraform_1.1.9_linux_amd64.zip
+Sha256Sum=9d2d8a89f5cc8bc1c06cb6f34ce76ec4b99184b07eb776f8b39183b513d7798a
