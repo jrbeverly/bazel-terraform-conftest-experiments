@@ -1,12 +1,12 @@
-load("//:bazel/terraform.bzl", "terraform_package", "terraform_plan")
+load("//:bazel/terraformv2.bzl", "terraform_package", "terraform_workspace")
 
-# Build & Package with everything we could possibly need
+
 terraform_package(
     name = "package",
     srcs = glob(["*.tf"]),
 )
 
-terraform_plan(
-    name = "plan",
-    src = ":package_init",
-)
+# terraform_workspace(
+#     name = "deploy",
+#     src = ":package",
+# )
