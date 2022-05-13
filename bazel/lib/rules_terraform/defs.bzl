@@ -1,5 +1,24 @@
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
+_CONTENT_PREFIX = """#!/usr/bin/env bash
+
+# --- begin runfiles.bash initialization v2 ---
+# Copy-pasted from the Bazel Bash runfiles library v2.
+set -uo pipefail; f=bazel_tools/tools/bash/runfiles/runfiles.bash
+source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \\
+ source "$(grep -sm1 "^$f " "${RUNFILES_MANIFEST_FILE:-/dev/null}" | cut -f2- -d' ')" 2>/dev/null || \\
+ source "$0.runfiles/$f" 2>/dev/null || \\
+ source "$(grep -sm1 "^$f " "$0.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null || \\
+ source "$(grep -sm1 "^$f " "$0.exe.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null || \\
+ { echo>&2 "ERROR: cannot find $f"; exit 1; }; f=; set -e
+# --- end runfiles.bash initialization v2 ---
+
+# Export RUNFILES_* envvars (and a couple more) for subprocesses.
+runfiles_export_envvars
+
+"""
+
+
 def terraform_source(name, srcs):
     """Function description.
 
@@ -135,27 +154,64 @@ def terraform_package(name, srcs):
     )
 
 def _terraform_workspace_impl(ctx):
+    terraform = ctx.toolchains["@bazel_toolchain_terraform//:toolchain_type"].toolinfo
     bundle = ctx.attr.src[TerraformBundleInfo]
+    
+    runfiles = ctx.runfiles().merge(ctx.attr._bash_runfiles[DefaultInfo].default_runfiles)
+
+    executable = terraform.tool
+    
+    str_args = [
+        "%s" % ctx.expand_location(v)
+        for v in ctx.attr.arguments
+    ]
+
+    terraform_exec = " ".join([
+        "exec",
+        "./%s" % executable.short_path,
+        "-chdir=%s" % bundle.workspace.short_path,
+    ])
+
+    command_exec = " ".join([terraform_exec] + str_args + ['"$@"\n'])
+
+    out_file = ctx.actions.declare_file(ctx.label.name + ".bash")
+    ctx.actions.write(
+        output = out_file,
+        content = "\n".join([_CONTENT_PREFIX] + [command_exec]),
+        is_executable = True,
+    )
+
+    runfiles = runfiles.merge(ctx.runfiles(files = [bundle.workspace, executable]))
+
     return [
         DefaultInfo(
             files = depset([bundle.workspace]),
-            runfiles = ctx.runfiles(files = [bundle.workspace]),
-            executable = ctx.executable.tool,
+            runfiles = runfiles,
+            executable = out_file,
         ),
     ]
+    # return [DefaultInfo(
+    #     files = depset([out_file]),
+    #     runfiles = runfiles.merge(ctx.runfiles(files = ctx.files.data + [executable])),
+    #     executable = out_file,
+    # )]
+
 
 terraform_workspace = rule(
     implementation = _terraform_workspace_impl,
     executable = True,
     attrs = {
+        "arguments": attr.string_list(
+            doc = "List of command line arguments. Subject to $(location) expansion. See https://docs.bazel.build/versions/master/skylark/lib/ctx.html#expand_location",
+        ),
         "src": attr.label(
             providers = [TerraformBundleInfo]
         ),
-        "tool": attr.label(
-            allow_single_file = True,
-            executable = True,
-            cfg = "exec",
-            default = "//:terraform",
+        "_bash_runfiles": attr.label(
+            default = Label("@bazel_tools//tools/bash/runfiles"),
         ),
     },
+    toolchains = [
+        "@bazel_toolchain_terraform//:toolchain_type",
+    ],
 )

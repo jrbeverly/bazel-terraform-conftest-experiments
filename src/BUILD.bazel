@@ -1,12 +1,13 @@
 load("//:bazel/lib/rules_terraform/defs.bzl", "terraform_package", "terraform_workspace")
 
-
 terraform_package(
     name = "package",
     srcs = glob(["*.tf"]),
 )
 
-# terraform_workspace(
-#     name = "deploy",
-#     src = ":package",
-# )
+# Use a makefile for parameterized systems
+terraform_workspace(
+    name = "deploy",
+    src = ":package",
+    arguments = ["apply", "-auto-approve"]
+)
