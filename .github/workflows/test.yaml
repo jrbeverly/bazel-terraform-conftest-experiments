@@ -1,0 +1,11 @@
+name: Build & Test
+on:
+  pull_request:
+
+jobs:
+  workflow-command-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Emit Summary
+        run: |
+          echo "### Hello world! :rocket:" >> $GITHUB_STEP_SUMMARY
