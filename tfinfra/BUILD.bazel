@@ -1,0 +1,34 @@
+load("@rules_terraform//:defs.bzl", "terraform_package", "terraform_workspace", "terraform_test", "terraform_policy")
+load("@rules_openpolicyagent//:defs.bzl", "opa_policy_test")
+
+terraform_package(
+    name = "package",
+    srcs = [ "main.tf" ],
+)
+
+opa_policy_test(
+    name = "policy_test",
+    srcs = ["tests/deny.rego", "tests/deny_test.rego"],
+)
+
+terraform_test(
+    name = "package_test",
+    srcs = ["tests/deny.rego"],
+    package = ":package"
+)
+
+terraform_workspace(
+    name = "primary",
+    src = ":package",
+)
+
+terraform_policy(
+    name = "primary_runtest",
+    srcs = ["spec/main.rego", "spec/tags.rego"],
+    workspace = ":primary.show",
+)
+
+terraform_workspace(
+    name = "secondary",
+    src = ":package",
+)

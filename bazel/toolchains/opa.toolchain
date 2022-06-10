@@ -1,0 +1,9 @@
+Name=opa
+Version=0.41.0
+
+[linux_amd64]
+OS=linux
+CPU=x86_64
+IsArchive=false
+URL=https://github.com/open-policy-agent/opa/releases/download/v0.41.0/opa_linux_amd64_static
+Sha256Sum=acdcfcfaace76588c2c3aa6a59aebf53e5906d019058d6a963e57b02c68b755b

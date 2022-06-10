@@ -1,0 +1,9 @@
+Name=conftest
+Version=0.32.1
+
+[linux_amd64]
+OS=linux
+CPU=x86_64
+Executable=conftest
+URL=https://github.com/open-policy-agent/conftest/releases/download/v0.32.1/conftest_0.32.1_Linux_x86_64.tar.gz
+Sha256Sum=2a9bbbef370153e843fcd0203e6d23787d36e8b393db80aa28106a4cfe57b2ab

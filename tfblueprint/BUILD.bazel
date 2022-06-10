@@ -1,0 +1,14 @@
+load("@rules_terraform//:defs.bzl", "terraform_package", "terraform_workspace")
+
+terraform_package(
+    name = "package",
+    srcs = glob(["*.tf"]),
+    modules = {
+        "//modules/random-uuid": "./modules/remap-random-uuid"
+    }
+)
+
+terraform_workspace(
+    name = "deploy",
+    src = ":package",
+)

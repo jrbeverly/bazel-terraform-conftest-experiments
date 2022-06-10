@@ -1,0 +1,7 @@
+load("@rules_terraform//:defs.bzl", "terraform_module")
+
+terraform_module(
+    name = "random-uuid",
+    srcs = glob(["*.tf"]),
+    visibility = ["//visibility:public"],
+)
